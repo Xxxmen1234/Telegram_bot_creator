@@ -1,248 +1,122 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>בודק עוקצים בית"ר</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BusWatch - דיווחי פקחים</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QQLFBE4FMZ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-QQLFBE4FMZ');
-</script>
+        header {
+            background-color: #202124;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
 
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    direction: rtl;
-    margin: 0;
-    padding: 0;
-    background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDgMC6dlXSTUjgFLWG7dez3-pFDUjMmpF6e2WTuhDQ0rcgc81FD7SBwDE&s=10') no-repeat center center fixed;
-    background-size: cover;
-    height: 100vh;
-    overflow: hidden;
-  }
+        #map-container {
+            flex-grow: 1;
+            background-color: #e5e3df;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-  .overlay {
-    background: rgba(255,255,255,0.85); /* יותר שקוף */
-    border: 2px solid black; /* מסגרת שחורה */
-    border-radius: 15px;
-    padding: 30px;
-    width: 90%;
-    max-width: 700px;
-    margin: auto;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-sizing: border-box;
-    text-align: center;
-  }
+        /* כאן תבוא המפה האמיתית בעתיד */
+        .mock-map {
+            width: 100%;
+            height: 100%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Israel_location_map.svg/500px-Israel_location_map.svg.png');
+            background-size: cover;
+            opacity: 0.5;
+        }
 
-  .header h1 {
-    font-size: 3em;
-    font-weight: bold;
-    margin: 0 0 10px 0;
-    border-bottom: 3px solid black;
-    padding-bottom: 10px;
-  }
+        .report-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
 
-  .header p {
-    font-size: 1.2em;
-    font-weight: bold;
-    margin: 10px 0;
-  }
+        .report-btn {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+            transition: transform 0.2s;
+        }
 
-  .important {
-    font-weight: bold;
-    text-decoration: underline;
-    color: #b30000;
-    font-size: 1.3em;
-  }
+        .report-btn:active {
+            transform: scale(0.95);
+        }
 
-  .chat-box {
-    background: #fff;
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    max-height: 250px;
-    overflow-y: auto;
-    margin-top: 20px;
-    text-align: right;
-    direction: rtl;
-  }
+        .recent-reports {
+            margin-top: 15px;
+            text-align: right;
+            max-height: 150px;
+            overflow-y: auto;
+        }
 
-  .message {
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 8px;
-    white-space: pre-line;
-  }
-
-  .user { background:#e0f7fa; text-align:left; }
-  .bot { background:#fff3e0; text-align:right; }
-
-  input {
-    width: 100%;
-    padding: 12px;
-    margin-top: 15px;
-    font-size: 1.2em;
-    border-radius: 5px;
-    border:1px solid #ccc;
-    box-sizing: border-box;
-  }
-
-  button {
-    margin-top: 10px;
-    padding: 12px 20px;
-    font-size: 1.2em;
-    font-weight: bold;
-    border-radius: 5px;
-    border: none;
-    background-color: #ffa500;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background-color: #e69500;
-  }
-
-  @media screen and (max-width: 600px) {
-    .overlay {
-      width: 95%;
-      padding: 20px;
-    }
-    .header h1 {
-      font-size: 2.2em;
-    }
-    .header p, .important {
-      font-size: 1.1em;
-    }
-    input, button {
-      font-size: 1em;
-      padding: 10px;
-    }
-    .chat-box {
-      max-height: 200px;
-    }
-  }
-</style>
+        .report-item {
+            background: #fff5f5;
+            border-right: 4px solid #ff4757;
+            padding: 8px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
-<div class="overlay">
-  <div class="header">
-    <h1>🖤 בודק עוקצים בית"ר 🕎 💛</h1>
+<header>
+    BusWatch - זהירות, פקח לפניך!
+</header>
 
-    <p>אתר זה בודק אנשים שעוקצים אוהדי בית"ר ירושלים לפי מספר טלפון.<br>
-    כדי לבדוק אם המספר עוקץ שלחו אותו כאן, או שלחו "רשימה" כדי לראות את כל המספרים במאגר.</p>
+<div id="map-container">
+    <div class="mock-map"></div>
+    <div style="position: absolute; color: #555;">כאן תוצג המפה בזמן אמת</div>
+</div>
 
-    <p class="important">⚠️ שימו לב!!! אם מספר מופיע כ"לא נמצא במאגר" זה לא אומר שהוא לא עוקץ, אלא שהוא לא נמצא במאגר.</p>
-  </div>
-
-  <div class="chat-box" id="chatBox"></div>
-
-  <input type="text" id="userInput" placeholder="הקלד מספר כאן...">
-  <button id="enterBtn">Enter</button>
+<div class="report-panel">
+    <button class="report-btn" onclick="sendReport()">⚠️ דווח על פקח בקו שלי</button>
+    
+    <div class="recent-reports" id="reportList">
+        <strong>דיווחים אחרונים באזורך:</strong>
+        <div class="report-item">קו 189 - תחנת רכבת מרכז (לפני 2 דק')</div>
+        <div class="report-item">קו 1 - ז'בוטינסקי (לפני 5 דק')</div>
+    </div>
 </div>
 
 <script>
-let phoneList = [
-"0502015070","0502241616","0502281815","0502282961","0502544716","0502728991",
-"0503116296","0503121247","0503238108","0503253232","0503406577","0503468010",
-"0503885739","0504258932","0504781414","0504888884","0505291031","0505313057",
-"0505704377","0506000178","0506447414","0506558175","0506592474","0506599395",
-"0506699657","0506856767","0507220145","0507303876","0507472051","0507498365",
-"0507759995","0508181332","0508182331","0508392008","0508575715","0508673444",
-"0508783462","0508941888","0509035330","0509437680","0509437940","0509520488",
-"0509579758","0509836595","0509841329","0515003585","0522537628","0523181029",
-"0523266921","0523476332","0523612753","0523615374","0523616224","0523793429",
-"0523915108","0523915180","0523943423","0524139360","0524144262","0524300877",
-"0524438889","0524452494","0524457320","0524771365","0524865153","0525126128",
-"0525262120","0525355471","0525385554","0525602569","0525617913","0525659061",
-"0525840166","0525853391","0525854678","0525949175","0526483521","0526548904",
-"0526922324","0527331413","0527921236","0527921506","0528030856","0528255920",
-"0528412782","0528648735","0528944716","0529323402","0529323881","0529608474",
-"0532339026","0532408118","0533038606","0533313144","0534215910","0534254657",
-"0534377745","0534580001","0535414742","0535471419","0537004627","0538898813",
-"0539195213","0539213828","0539725977","0539932776","0539985800","0542066556",
-"0542159138","0542203465","0542249175","0542694767","0542697803","0543542493",
-"0544224250","0544300089","0544308925","0544376924","0544601861","0544728045",
-"0544970382","0544977022","0545225639","0545639522","0545858916","0546180171",
-"0546249483","0546251061","0546359919","0546711494","0546822420","0546854785",
-"0546954977","0546990756","0546993429","0547151575","0547274334","0547291887",
-"0547346420","0547443415","0547555154","0547709761","0547834948","0547868850",
-"0548232494","0548232502","0548232598","0548244745","0548301208","0548931210",
-"0549012423","0549054784","0549129986","0549153899","0549259050","0549319153",
-"0549850511","0550903533","0552400877","0552401230","0552430087","0552467856",
-"0552637788","0552674967","0552733141","0552916856","0553188788","0553303860",
-"0553993277","0554269780","0554699075","0555606845","0556645939","0556654975",
-"0556669436","0556854421","0557041287","0557049497","0557053630","0557227383",
-"0557239960","0557242811","0557247944","0557250389","0557298419","0557774363",
-"0559256947","0559266317","0559431224","0559465904","0559556931","0559610748",
-"0559728523","0559831962","0559844585","0559871650","0584628466","0585088502",
-"0585807028","0586202520","+447482874377","+639306739785"
-];
-
-function cleanInput(input){
-  return input.replace(/[^\d+]/g,'');
-}
-
-function normalizeNumber(input){
-  let num = cleanInput(input);
-
-  if(num.startsWith("972")) num = "0" + num.slice(3);
-  if(num.startsWith("+972")) num = "0" + num.slice(4);
-
-  if(num.startsWith("0") && num.length === 10){
-    return {valid:true, number:num, country:"🇮🇱 ישראל"};
-  }
-
-  if(num.startsWith("44")) return {valid:true, number:"+"+num, country:"🇬🇧 בריטניה"};
-  if(num.startsWith("63")) return {valid:true, number:"+"+num, country:"🇵🇭 פיליפינים"};
-
-  return {valid:false};
-}
-
-function checkNumber(input){
-  let data = normalizeNumber(input);
-  if(!data.valid) return "❌ המספר שציינת אינו תקין";
-  let exists = phoneList.includes(data.number);
-  return `📞 מספר: ${data.number}\n🌍 מדינה: ${data.country}\n📌 תוצאה: ${exists ? "⚠️ עוקץ" : "✅ לא נמצא במאגר"}`;
-}
-
-function getList(){
-  return `📋 רשימת מספרים במאגר (סה"כ: ${phoneList.length} מספרים):\n` + phoneList.join("\n");
-}
-
-const chatBox = document.getElementById("chatBox");
-const input = document.getElementById("userInput");
-const enterBtn = document.getElementById("enterBtn");
-
-function addMessage(text, sender){
-  let div = document.createElement("div");
-  div.className = "message " + sender;
-  div.innerText = text;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function handleInput(){
-  let val = input.value.trim();
-  if(!val) return;
-  addMessage(val,"user");
-  let response = val === "רשימה" ? getList() : checkNumber(val);
-  addMessage(response,"bot");
-  input.value="";
-}
-
-input.addEventListener("keydown", function(e){
-  if(e.key === "Enter") handleInput();
-});
-enterBtn.addEventListener("click", handleInput);
+    function sendReport() {
+        // פונקציה שמדמה שליחת דיווח
+        const line = prompt("על איזה מספר קו אתה מדווח?");
+        if (line) {
+            const list = document.getElementById('reportList');
+            const newItem = document.createElement('div');
+            newItem.className = 'report-item';
+            newItem.innerHTML = `קו ${line} - מיקומך הנוכחי (עכשיו)`;
+            list.insertBefore(newItem, list.firstChild.nextSibling);
+            alert("הדיווח התקבל! עזרת לנוסעים אחרים.");
+        }
+    }
 </script>
 
 </body>
