@@ -6,83 +6,109 @@
     <title>BotFactory - יוצר הבוטים שלך</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; text-align: center; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        h1 { color: #0088cc; }
-        .tabs { display: flex; justify-content: center; margin-bottom: 20px; gap: 10px; }
-        .tab { padding: 10px 20px; background: #eee; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1 { color: #0088cc; margin-bottom: 10px; }
+        .input-group { text-align: right; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        input, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-family: inherit; }
+        textarea { height: 150px; resize: none; }
+        .tabs { display: flex; justify-content: center; margin-bottom: 15px; gap: 10px; }
+        .tab { padding: 8px 15px; background: #eee; cursor: pointer; border-radius: 5px; font-size: 14px; }
         .tab.active { background: #0088cc; color: white; }
-        .content { display: none; }
-        .content.active { display: block; }
-        textarea { width: 100%; height: 200px; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd; padding: 10px; font-family: monospace; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; }
+        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
-        .status { margin-top: 15px; color: #555; font-weight: bold; }
+        .status { margin-top: 20px; padding: 10px; border-radius: 5px; display: none; }
+        .success { display: block; background: #d4edda; color: #155724; }
+        .error { display: block; background: #f8d7da; color: #721c24; }
+        small { color: #666; font-size: 12px; }
+        a { color: #0088cc; text-decoration: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🤖 BotFactory</h1>
-    <p>בנה בוט לטלגרם בקלות ובחינם</p>
+    <p>בנה בוט לטלגרם בשימוש בבינה מלאכותית</p>
 
-    <input type="text" id="botToken" placeholder="הכנס כאן את ה-Bot Token מ-BotFather">
-    <input type="text" id="geminiKey" placeholder="הכנס כאן את ה-Gemini API Key (אופציונלי ל-AI)">
+    <div class="input-group">
+        <label>1. טוקן בוט (מ-BotFather):</label>
+        <input type="text" id="botToken" placeholder="הדבק כאן את ה-Token...">
+        <small><a href="https://t.me/botfather" target="_blank">איך מוציאים טוקן? לחץ כאן</a></small>
+    </div>
 
+    <label style="text-align: right; display: block; margin-bottom: 8px; font-weight: bold;">2. מה הבוט שלך יעשה?</label>
     <div class="tabs">
-        <div class="tab active" onclick="openTab(event, 'aiTab')">🪄 AI</div>
-        <div class="tab" onclick="openTab(event, 'htmlTab')">HTML</div>
-        <div class="tab" onclick="event, openTab(event, 'jsonTab')">JSON</div>
+        <div class="tab active" id="aiTabBtn" onclick="setMode('ai')">🪄 בינה מלאכותית</div>
+        <div class="tab" id="codeTabBtn" onclick="setMode('code')">קוד חופשי</div>
     </div>
 
-    <div id="aiTab" class="content active">
-        <textarea id="aiInput" placeholder="תאר את הבוט שלך... (למשל: בוט שמוכר פיצה ומציג תפריט)"></textarea>
-    </div>
-    <div id="htmlTab" class="content">
-        <textarea id="htmlInput" placeholder="<bot> <command name='start'> שלום! </command> </bot>"></textarea>
-    </div>
-    <div id="jsonTab" class="content">
-        <textarea id="jsonInput" placeholder='{ "commands": [...] }'></textarea>
+    <div class="input-group">
+        <textarea id="botContent" placeholder="תאר את הבוט שלך... (למשל: בוט שנותן המלצות לסרטים)"></textarea>
     </div>
 
-    <button onclick="deploy()">הפעל את הבוט עכשיו!</button>
-    <div id="status" class="status"></div>
+    <button id="submitBtn" onclick="deployBot()">הפעל את הבוט עכשיו!</button>
+    <div id="statusBox" class="status"></div>
 </div>
 
 <script>
-    function openTab(evt, tabName) {
-        var contents = document.getElementsByClassName("content");
-        for (var i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-        var tabs = document.getElementsByClassName("tab");
-        for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
+    let currentMode = 'ai';
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('aiTabBtn').classList.toggle('active', mode === 'ai');
+        document.getElementById('codeTabBtn').classList.toggle('active', mode === 'code');
+        const area = document.getElementById('botContent');
+        area.placeholder = mode === 'ai' ? "תאר את הבוט במילים חופשיות..." : "הכנס כאן את תוכן הבוט...";
     }
 
-    async function deploy() {
-        const status = document.getElementById('status');
-        status.innerText = "שולח בקשה לשרת... המתן";
-        
+    async function deployBot() {
+        const btn = document.getElementById('submitBtn');
+        const status = document.getElementById('statusBox');
+        const token = document.getElementById('botToken').value;
+        const content = document.getElementById('botContent').value;
+
+        if (!token || !content) {
+            alert("נא למלא את כל השדות!");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "מעבד... (זה עשוי לקחת דקה)";
+        status.className = "status"; // איפוס עיצוב
+
         const data = {
-            token: document.getElementById('botToken').value,
-            gemini_key: document.getElementById('geminiKey').value,
-            type: document.querySelector('.tab.active').innerText.includes('AI') ? 'ai' : 'code',
-            content: document.querySelector('.content.active textarea').value
+            token: token,
+            type: currentMode,
+            content: content
         };
 
         try {
-            // כאן נחליף בעתיד את הכתובת לכתובת של השרת שלך ב-Render
-            const response = await fetch('https://telegram-bot-creator-9bhw.onrender.com/create_bot', {
+            // שים לב: כאן צריך להיות הקישור שלך מה-Render!
+            const response = await fetch('https://telegram-bot-creator-axli.onrender.com/create_bot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+
             const result = await response.json();
-            status.innerText = "הבוט הופעל בהצלחה!";
+
+            if (response.ok) {
+                status.innerText = "✅ הצלחה! הבוט '" + result.bot_name + "' חובר למערכת.";
+                status.classList.add('success');
+            } else {
+                status.innerText = "❌ שגיאה: " + (result.detail || "משהו השתבש");
+                status.classList.add('error');
+            }
         } catch (error) {
-            status.innerText = "שגיאה: השרת עדיין לא מחובר.";
+            status.innerText = "❌ שגיאה בחיבור לשרת. וודא שהשרת ב-Render דולק (Live).";
+            status.classList.add('error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "הפעל את הבוט עכשיו!";
         }
     }
 </script>
+
 </body>
 </html>
+l
