@@ -39,7 +39,7 @@ async def telegram_webhook(token: str, request: Request):
 
         # כאן ה-AI נכנס לפעולה ועונה למשתמש בטלגרם!
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(f"You are a helpful telegram bot. The user said: {user_text}")
         
         await bot.send_message(chat_id=chat_id, text=response.text)
